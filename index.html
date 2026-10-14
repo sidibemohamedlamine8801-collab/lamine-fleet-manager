@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lamine Fleet Manager</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f5f8;color:#172033}
+header{background:#123a63;color:white;padding:22px 16px}
+header h1{margin:0;font-size:23px}
+header p{margin:7px 0 0;font-size:13px}
+nav{display:flex;gap:7px;overflow-x:auto;padding:10px;background:white}
+button{cursor:pointer;border:0;border-radius:8px;padding:12px;font-weight:bold}
+nav button{background:#e7edf5;color:#123a63;white-space:nowrap}
+nav button.active,.primary{background:#1769aa;color:white}
+main{padding:14px;max-width:900px;margin:auto}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.card,.panel{background:white;padding:15px;border-radius:12px;margin-bottom:12px;box-shadow:0 2px 6px #0000000b}
+.label{font-size:12px;color:#667085}
+.value{font-size:20px;font-weight:bold;margin-top:8px;overflow-wrap:anywhere}
+h2{font-size:19px;margin:8px 0 15px}
+h3{font-size:15px;margin-top:0}
+label{display:block;font-size:13px;margin:12px 0 5px}
+input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;background:white;font-size:16px}
+.primary{width:100%;margin-top:15px}
+.section{display:none}.section.active{display:block}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{text-align:left;padding:9px 6px;border-bottom:1px solid #e5e7eb}
+.tablewrap{overflow-x:auto}
+.tag{display:inline-block;border-radius:5px;padding:4px 6px;background:#fff0d4;color:#875500}
+.small{font-size:12px;color:#667085;line-height:1.5}
+.item{border-bottom:1px solid #e5e7eb;padding:10px 0}
+.danger{background:#fee2e2;color:#991b1b}
+</style>
+</head>
+<body>
+<header>
+<h1>🚛 LAMINE FLEET MANAGER</h1>
+<p>Gestion de flotte • 10 camions • FCFA</p>
+</header>
+
+<nav>
+<button class="active" data-page="home">Accueil</button>
+<button data-page="trucks">Camions</button>
+<button data-page="invoices">Factures</button>
+<button data-page="payments">Paiements</button>
+<button data-page="expenses">Dépenses</button>
+<button data-page="reports">Bilans</button>
+</nav>
+
+<main>
+<section id="home" class="section active">
+<h2>Tableau de bord</h2>
+<div class="cards">
+<div class="card"><div class="label">Recettes encaissées</div><div class="value" id="totalPaid">0 F</div></div>
+<div class="card"><div class="label">Factures émises</div><div class="value" id="totalInvoices">0 F</div></div>
+<div class="card"><div class="label">Reste à recevoir</div><div class="value" id="totalDue">0 F</div></div>
+<div class="card"><div class="label">Dépenses totales</div><div class="value" id="totalExpenses">0 F</div></div>
+</div>
+<div class="panel">
+<h3>Situation de la flotte</h3>
+<div id="homeSummary"></div>
+</div>
+<div class="panel">
+<h3>Attention</h3>
+<p class="small">Une facture émise n'est pas une recette encaissée. Les paiements doivent être affectés aux factures pour calculer précisément les impayés.</p>
+</div>
+</section>
+
+<section id="trucks" class="section">
+<h2>Mes 10 camions</h2>
+<div class="panel">
+<form id="truckForm">
+<label>Camion</label>
+<select id="truckName"></select>
+<label>Immatriculation</label>
+<input id="plate" placeholder="Ex. AB 1234 CI">
+<label>Nom du chauffeur</label>
+<input id="driver" placeholder="Nom du chauffeur">
+<button class="primary">Enregistrer le camion</button>
+</form>
+</div>
+<div class="panel" id="truckList"></div>
+</section>
+
+<section id="invoices" class="section">
+<h2>Factures clients</h2>
+<div class="panel">
+<form id="invoiceForm">
+<label>Numéro de facture</label>
+<input id="invNumber" required placeholder="Ex. FAC-001">
+<label>Camion concerné</label>
+<select id="invTruck"></select>
+<label>Date de facture</label>
+<input id="invDate" type="date" required>
+<label>Mois comptable</label>
+<input id="invMonth" type="month" required>
+<label>Montant de la facture (FCFA)</label>
+<input id="invAmount" type="number" min="1" step="1" required>
+<label>État initial</label>
+<select id="invStatus"><option value="unpaid">Impayée</option><option value="paid">Déjà entièrement payée</option></select>
+<button class="primary">Enregistrer la facture</button>
+</form>
+</div>
+<div class="panel"><h3>Liste des factures</h3><div class="tablewrap" id="invoiceList"></div></div>
+</section>
+
+<section id="payments" class="section">
+<h2>Paiements reçus de la société</h2>
+<div class="panel">
+<form id="paymentForm">
+<label>Date du versement</label>
+<input id="payDate" type="date" required>
+<label>Référence du versement</label>
+<input id="payRef" placeholder="Ex. Virement du 15">
+<label>Montant reçu (FCFA)</label>
+<input id="payAmount" type="number" min="1" step="1" required>
+<label>Facture concernée</label>
+<select id="payInvoice"></select>
+<p class="small">Choisis une facture pour affecter le versement. Pour un versement global, tu peux l'affecter successivement à plusieurs factures en enregistrant chaque part.</p>
+<button class="primary">Enregistrer le paiement</button>
+</form>
+</div>
+<div class="panel"><h3>Historique des paiements</h3><div id="paymentList"></div></div>
+</section>
+
+<section id="expenses" class="section">
+<h2>Gasoil, entretien et réparations</h2>
+<div class="panel">
+<form id="expenseForm">
+<label>Type de dépense</label>
+<select id="expType"><option>Gasoil</option><option>Réparation</option><option>Entretien</option><option>Autre</option></select>
+<label>Camion</label><select id="expTruck"></select>
+<label>Date</label><input id="expDate" type="date" required>
+<label>Description / litres de gasoil</label><input id="expDesc" placeholder="Ex. 80 litres, vidange">
+<label>Montant (FCFA)</label><input id="expAmount" type="number" min="1" step="1" required>
+<button class="primary">Enregistrer la dépense</button>
+</form>
+</div>
+<div class="panel"><h3>Historique des dépenses</h3><div id="expenseList"></div></div>
+</section>
+
+<section id="reports" class="section">
+<h2>Bilan mensuel</h2>
+<div class="panel">
+<label>Choisir le mois</label>
+<input type="month" id="reportMonth">
+<div id="reportResult"></div>
+</div>
+<div class="panel">
+<button class="primary" id="exportBtn">Exporter les données en CSV</button>
+<p class="small">Tu pourras ouvrir le fichier exporté dans un tableur compatible.</p>
+</div>
+</section>
+</main>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const trucks=Array.from({length:10},(_,i)=>({
+id:i+1,name:"Camion "+(i+1),plate:"",driver:""
+}));
+let invoices=[],payments=[],expenses=[];
+const today=new Date();
+const dateString=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const monthString=d=>dateString(d).slice(0,7);
+const money=n=>Math.round(n).toLocaleString("fr-FR")+" FCFA";
+const safe=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const truckName=id=>trucks.find(t=>t.id===Number(id))?.name||"Camion";
+$("invDate").value=dateString(today);
+$("payDate").value=dateString(today);
+$("expDate").value=dateString(today);
+$("invMonth").value=monthString(today);
+$("reportMonth").value=monthString(today);
+
+function fillTruckSelect(id){
+$(id).innerHTML=trucks.map(t=>`<option value="${t.id}">${t.name}</option>`).join("");
+}
+["truckName","invTruck","expTruck"].forEach(fillTruckSelect);
+function fillInvoiceSelect(){
+const open=invoices.filter(i=>i.amount-i.paid>0);
+$("payInvoice").innerHTML='<option value="">Choisir une facture impayée</option>'+open.map(i=>`<option value="${i.id}">${safe(i.number)} — ${truckName(i.truck)} — reste ${money(i.amount-i.paid)}</option>`).join("");
+}
+function sum(a,fn){return a.reduce((s,x)=>s+fn(x),0)}
+function invoiceDue(i){return Math.max(0,i.amount-i.paid)}
+function render(){
+const invoiced=sum(invoices,i=>i.amount);
+const received=sum(payments,p=>p.amount);
+const expensesTotal=sum(expenses,e=>e.amount);
+const due=sum(invoices,invoiceDue);
+$("totalPaid").textContent=money(received);
+$("totalInvoices").textContent=money(invoiced);
+$("totalDue").textContent=money(due);
+$("totalExpenses").textContent=money(expensesTotal);
+$("homeSummary").innerHTML=trucks.map(t=>{
+const rev=sum(invoices.filter(i=>i.truck===t.id),i=>i.amount);
+const paid=sum(payments.filter(p=>invoices.some(i=>i.id===p.invoiceId&&i.truck===t.id)),p=>p.amount);
+const dueTruck=sum(invoices.filter(i=>i.truck===t.id),invoiceDue);
+const exp=sum(expenses.filter(e=>e.truck===t.id),e=>e.amount);
+return `<div class="item"><b>${safe(t.name)}</b><br><span class="small">Facturé : ${money(rev)} · Reçu : ${money(paid)} · Impayé : ${money(dueTruck)} · Dépenses : ${money(exp)}</span></div>`;
+}).join("");
+$("truckList").innerHTML=trucks.map(t=>`<div class="item"><b>${safe(t.name)}</b><br>${safe(t.plate||"Immatriculation non renseignée")}<br><span class="small">Chauffeur : ${safe(t.driver||"Non renseigné")}</span></div>`).join("");
+$("invoiceList").innerHTML=invoices.length?`<table><tr><th>Facture</th><th>Camion</th><th>Montant</th><th>Reste</th></tr>${invoices.map(i=>`<tr><td>${safe(i.number)}<br>${safe(i.date)}</td><td>${truckName(i.truck)}</td><td>${money(i.amount)}</td><td>${money(invoiceDue(i))}</td></tr>`).join("")}</table>`:"Aucune facture enregistrée.";
+$("paymentList").innerHTML=payments.length?payments.slice().reverse().map(p=>`<div class="item"><b>${money(p.amount)}</b><br>${safe(p.date)} · ${safe(p.ref||"Sans référence")}<br><span class="small">Facture : ${safe(invoices.find(i=>i.id===p.invoiceId)?.number||"Non affectée")}</span></div>`).join(""):"Aucun paiement enregistré.";
+$("expenseList").innerHTML=expenses.length?expenses.slice().reverse().map(e=>`<div class="item"><b>${safe(e.type)} — ${money(e.amount)}</b><br>${safe(e.date)} · ${truckName(e.truck)}<br><span class="small">${safe(e.desc||"Sans description")}</span></div>`).join(""):"Aucune dépense enregistrée.";
+fillInvoiceSelect();
+renderReport();
+}
+function renderReport(){
+const m=$("reportMonth").value;
+const inv=invoices.filter(i=>i.month===m);
+const pays=payments.filter(p=>p.date.slice(0,7)===m);
+const exps=expenses.filter(e=>e.date.slice(0,7)===m);
+const billed=sum(inv,i=>i.amount);
+const received=sum(pays,p=>p.amount);
+const cost=sum(exps,e=>e.amount);
+$("reportResult").innerHTML=`<div class="item">Factures émises ce mois : <b>${money(billed)}</b></div><div class="item">Paiements reçus ce mois : <b>${money(received)}</b></div><div class="item">Dépenses du mois : <b>${money(cost)}</b></div><div class="item">Trésorerie du mois (encaissé − dépenses) : <b>${money(received-cost)}</b></div><p class="small">Le total des factures impayées est calculé dans le tableau de bord. Ce bilan de trésorerie n'est pas nécessairement le bénéfice comptable du mois.</p>`;
+}
+$("truckForm").addEventListener("submit",e=>{
+e.preventDefault();const t=trucks.find(t=>t.id===Number($("truckName").value));
+t.plate=$("plate").value.trim();t.driver=$("driver").value.trim();
+$("plate").value="";$("driver").value="";render();alert("Informations du camion enregistrées.");
+});
+$("invoiceForm").addEventListener("submit",e=>{
+e.preventDefault();
+const amount=Number($("invAmount").value);
+if(!Number.isSafeInteger(amount)||amount<=0)return alert("Montant invalide.");
+if(invoices.some(i=>i.number.trim().toLowerCase()===$("invNumber").value.trim().toLowerCase()))return alert("Ce numéro de facture existe déjà.");
+const paid=$("invStatus").value==="paid"?amount:0;
+invoices.push({id:Date.now()+Math.random(),number:$("invNumber").value.trim(),truck:Number($("invTruck").value),date:$("invDate").value,month:$("invMonth").value,amount,paid});
+if(paid)payments.push({id:Date.now()+Math.random(),date:$("invDate").value,ref:"Paiement initial déclaré",amount,invoiceId:invoices[invoices.length-1].id});
+e.target.reset();$("invDate").value=dateString(today);$("invMonth").value=monthString(today);render();alert("Facture enregistrée.");
+});
+$("paymentForm").addEventListener("submit",e=>{
+e.preventDefault();const id=Number($("payInvoice").value),invoice=invoices.find(i=>i.id===id),amount=Number($("payAmount").value);
+if(!invoice)return alert("Choisis une facture pour affecter le paiement.");
+if(!Number.isSafeInteger(amount)||amount<=0)return alert("Montant invalide.");
+if(amount>invoiceDue(invoice))return alert("Le paiement dépasse le reste dû sur cette facture.");
+invoice.paid+=amount;
+payments.push({id:Date.now()+Math.random(),date:$("payDate").value,ref:$("payRef").value.trim(),amount,invoiceId:id});
+e.target.reset();$("payDate").value=dateString(today);render();alert("Paiement enregistré et affecté à la facture.");
+});
+$("expenseForm").addEventListener("submit",e=>{
+e.preventDefault();const amount=Number($("expAmount").value);
+if(!Number.isSafeInteger(amount)||amount<=0)return alert("Montant invalide.");
+expenses.push({id:Date.now()+Math.random(),type:$("expType").value,truck:Number($("expTruck").value),date:$("expDate").value,desc:$("expDesc").value.trim(),amount});
+e.target.reset();$("expDate").value=dateString(today);render();alert("Dépense enregistrée.");
+});
+$("reportMonth").addEventListener("change",renderReport);
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>{
+document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x===b));
+document.querySelectorAll(".section").forEach(s=>s.classList.toggle("active",s.id===b.dataset.page));
+}));
+$("exportBtn").addEventListener("click",()=>{
+const rows=[["Type","Date","Camion","Référence","Montant FCFA","Reste FCFA"]];
+invoices.forEach(i=>rows.push(["Facture",i.date,truckName(i.truck),i.number,i.amount,invoiceDue(i)]));
+payments.forEach(p=>rows.push(["Paiement",p.date,truckName(invoices.find(i=>i.id===p.invoiceId)?.truck),p.ref,p.amount,0]));
+expenses.forEach(x=>rows.push([x.type,x.date,truckName(x.truck),x.desc,x.amount,0]));
+const csv="\ufeff"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n");
+const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="lamine-fleet-manager.csv";a.click();URL.revokeObjectURL(a.href);
+});
+render();
+})();
+</script>
+</body>
+  </html>
